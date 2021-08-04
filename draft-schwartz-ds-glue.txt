@@ -341,9 +341,10 @@ Table of Contents
    required owner name and (2) the client cannot guarantee that the
    parent will use the VERBATIM digest to produce the DS record.
 
-   Child zones SHOULD publish the DSGLUE contents as ordinary records of
-   the specified type at the specified owner name, in order to enable
-   revalidation and simplify debugging.
+   Child zones SHOULD also publish the DSGLUE contents as ordinary
+   records of the specified type at the indicated owner name, in order
+   to enable revalidation [I-D.draft-ietf-dnsop-ns-revalidation] and
+   simplify debugging.
 
 6.2.  Referral response size
 
@@ -353,7 +354,7 @@ Table of Contents
 
 6.3.  PKI and DANE for Authenticated Encryption
 
-      TODO: Maybe move this into a different draft.
+      TODO: Move some of this text into a different draft.
 
    Nameservers supporting authenticated encryption MAY indicate any DANE
    mode, or none at all.
@@ -362,6 +363,10 @@ Table of Contents
    the DSGLUE to avoid the latency of a TLSA lookup during delegation.
    However, child zones should be aware that this adds complexity and
    delay to the process of TLSA key rotation.
+
+   Nameservers that do not support DANE SHOULD add an NSEC or NSEC3
+   record denying the TLSA record to the DSGLUE, as shown in
+   Section 4.4.1, to avoid an unnecessary delay.
 
    Resolvers that support authenticated encryption MAY implement support
    for PKI-based authentication, DANE, or both.  PKI-only resolvers MUST
@@ -422,6 +427,13 @@ Table of Contents
               May 2017, <https://datatracker.ietf.org/doc/html/rfc8174>.
 
 8.2.  Informative References
+
+   [I-D.draft-ietf-dnsop-ns-revalidation]
+              Huque, S., Vixie, P., and R. Dolmans, "Delegation
+              Revalidation by DNS Resolvers", Work in Progress,
+              Internet-Draft, draft-ietf-dnsop-ns-revalidation-01, 12
+              July 2021, <https://datatracker.ietf.org/doc/html/draft-
+              ietf-dnsop-ns-revalidation-01>.
 
    [I-D.draft-schwartz-svcb-dns]
               Schwartz, B., "Service Binding Mapping for DNS Servers",
