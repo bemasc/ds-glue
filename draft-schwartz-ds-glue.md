@@ -208,7 +208,7 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
                           1 ns1.example.com. alpn=dot)
 ~~~
 
-### Disabling DANE
+### Disabling DANE {#no-dane}
 
 Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process.  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record:
 
@@ -230,7 +230,7 @@ In order for the child to publish DSGLUE records, the parent must allow the chil
 
 If the parent supports CDS {{!RFC8078}}, child zones MAY use CDS to push DSGLUE into the parent.  Note that CDNSKEY records cannot be used, because (1) the client cannot publish CDNSKEY records with the required owner name and (2) the client cannot guarantee that the parent will use the VERBATIM digest to produce the DS record.
 
-Child zones SHOULD publish the DSGLUE contents as ordinary records of the specified type at the specified owner name, in order to enable revalidation and simplify debugging.
+Child zones SHOULD also publish the DSGLUE contents as ordinary records of the specified type at the indicated owner name, in order to enable revalidation {{?I-D.draft-ietf-dnsop-ns-revalidation}} and simplify debugging.
 
 ## Referral response size
 
@@ -238,11 +238,13 @@ When records are present in both ordinary glue and DSGLUE, the response size is 
 
 ## PKI and DANE for Authenticated Encryption
 
-> TODO: Maybe move this into a different draft.
+> TODO: Move some of this text into a different draft.
 
 Nameservers supporting authenticated encryption MAY indicate any DANE mode, or none at all.
 
 As an optimization, nameservers using DANE MAY place a TLSA record in the DSGLUE to avoid the latency of a TLSA lookup during delegation.  However, child zones should be aware that this adds complexity and delay to the process of TLSA key rotation.
+
+Nameservers that do not support DANE SHOULD add an NSEC or NSEC3 record denying the TLSA record to the DSGLUE, as shown in {{no-dane}}, to avoid an unnecessary delay.
 
 Resolvers that support authenticated encryption MAY implement support for PKI-based authentication, DANE, or both.  PKI-only resolvers MUST nonetheless resolve TLSA records, and MUST NOT require authentication if the DANE mode is DANE-TA(2) or DANE-EE(3) {{!RFC7671}}.  DANE-only resolvers MUST NOT require authentication if the TLSA record does not exist.
 
