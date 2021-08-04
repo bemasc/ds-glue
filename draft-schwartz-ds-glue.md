@@ -30,7 +30,7 @@ informative:
 
 This draft describes a mechanism for conveying arbitrary authenticated DNS data from a parent nameserver to a recursive resolver as part of an in-bailiwick delegation response.
 
--- middle
+--- middle
 
 # Conventions and Definitions
 
@@ -55,6 +55,7 @@ We propose to convey glue RRs in DS records, enabling authenticated delivery of 
 ## Encoding {#encoding}
 
 To encode a resource record R, we first transform it into a DNSKEY pseudo-record K as follows:
+
 * Owner Name of K = The Owner Name of R relative to the child zone apex.
 * Flags = 0x0001, i.e. only SEP (bit 15) is set.
 * Protocol = 3
@@ -62,6 +63,7 @@ To encode a resource record R, we first transform it into a DNSKEY pseudo-record
 * Public Key = The RR type of R, followed by the RDATA of R in canonical RR form ({{!RFC4034, Section 6.2}}).
 
 For example, this RRSet:
+
 ~~~
 $ORIGIN example.com.
 @ 3600 IN NS ns1
@@ -88,12 +90,12 @@ would be represented as the following pseudo-records (in C-like pseudo-zone-file
 
 This DNSKEY RRSet's owner name is "." because the NS RRSet appears at the zone apex.  The NS RDATA has been converted to lowercase as specified by the canonicalization algorithm.  These are "pseudo-records" because they do not appear in any zone in this form.
 
-Having constructed the DNSKEY pseudo-record, the DS record is constructed as usual, but always using the VERBATIM digest type {{!I-D.vandijk-dnsop-ds-digest-verbatim}}.  Thus, the final DS wire format RDATA forms the following concatenation:
+Having constructed the DNSKEY pseudo-record, the DS record is constructed as usual, but always using the VERBATIM digest type {{!I-D.draft-vandijk-dnsop-ds-digest-verbatim}}.  Thus, the final DS wire format RDATA forms the following concatenation:
 
 ~~~
 Key Tag | Algorithm = DSGLUE | Digest Type = VERBATIM | Digest = (
   DNSKEY owner name = name prefix | DNSKEY RDATA = (
-    Flags = 0x0001 | Protocol = 3 | Algorithm = DSGLUE | Public Key = (
+    Flags = 1 | Protocol = 3 | Algorithm = DSGLUE | Public Key = (
       RR Type | RDATA
     )
   )
@@ -106,7 +108,7 @@ This DS record appears in the usual DS RRSet, whose owner name is the child apex
 
 ## Interpretation
 
-Upon receiving the DS RRSet, the recipient will first verify the DS RRSIGs as normal, and abort the resolution as Bogus if DNSSEC validation fails.  
+Upon receiving the DS RRSet, the recipient will first verify the DS RRSIGs as normal, and abort the resolution as Bogus if DNSSEC validation fails.
 
 Resolvers implementing this specification SHALL reverse the encoding process to extract one or more RRSets, all carrying the TTL of the DS RRSet.  The resolver SHALL add each of these RRSets to the delegation responses, replacing any RRSet with the same owner name and type.  Resolution then proceeds as normal.
 
@@ -127,6 +129,7 @@ For these examples, we define the macro `$DSGLUE(prefix, RR type, rdata)` to con
 ## Out-of-bailiwick referral
 
 An out-of-bailiwick referral contains only NS records, e.g.
+
 ~~~
 $ORIGIN com.
 example 3600 IN NS ns1.example.net.
@@ -134,6 +137,7 @@ example 3600 IN NS ns1.example.net.
 ~~~
 
 These records would be encoded in DSGLUE as:
+
 ~~~
 $ORIGIN com.
 example 3600 IN DS $DSGLUE(., NS, ns1.example.net.)
@@ -143,6 +147,7 @@ example 3600 IN DS $DSGLUE(., NS, ns1.example.net.)
 ## In-bailiwick referral
 
 An in-bailiwick referral contains NS records and at least one kind of address record.
+
 ~~~
 $ORIGIN com.
 example    3600 IN NS    ns1.example
@@ -154,6 +159,7 @@ ns2.example 600 IN A     192.0.2.2
 ~~~
 
 These records would be encoded in DSGLUE as:
+
 ~~~
 $ORIGIN com.
 example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
@@ -169,41 +175,45 @@ Note that the differing TTL between RRSets is lost.
 ## In-bailiwick referral without IPv4 {#example-nsec}
 
 Consider a delegation to a nameserver that is only reachable with IPv6:
+
 ~~~
 $ORIGIN com.
 example    3600 IN NS    ns1.example
 ns1.example 600 IN AAAA  2001:db8::1
 ~~~
 
-A zone in this configuration can use an NSEC DSGLUE record to indicate that there is no IPv4 record:
+A zone in this configuration can use an NSEC DSGLUE record to indicate that there is no IPv4 address:
+
 ~~~
 $ORIGIN com.
 example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
-            IN DS $DSGLUE(*., NSEC, *.example.com. A)
+            IN DS $DSGLUE(*., NSEC, *.example.com. A SVCB)
 ~~~
 
-This arrangement prevents an adversary from inserting their own A records into the delegation response (e.g. in order to observe the queries).
+This arrangement prevents an adversary from inserting their own A (or SVCB) records into the delegation response (e.g. in order to observe the queries).
 
 Note that although this NSEC record denies the existence of any A records in *.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
 
 ## Delegation with authenticated encryption
 
-Assuming a SVCB-based signaling mechanism similar to {{I-D.schwartz-dns-svcb}}, an in-bailiwick referral with support for authenticated encryption is indicated as follows:
+Assuming a SVCB-based signaling mechanism similar to {{?I-D.draft-schwartz-svcb-dns}}, an in-bailiwick referral with support for authenticated encryption is indicated as follows:
+
 ~~~
 $ORIGIN com.
 example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(ns1., A, 192.0.2.1)
             IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
-            IN DS $DSGLUE(_dns.ns1., SVCB, 1 ns1.example.com. alpn=dot)
+            IN DS $DSGLUE(_dns.ns1., SVCB,
+                          1 ns1.example.com. alpn=dot)
 ~~~
 
 ### Disabling DANE
 
-Resolvers can check whether a nameserver supports DANE by resolving a TLSA record during the delegation process.  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record:
+Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process.  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record:
+
 ~~~
-$ORIGIN com.
-example 600 IN DS $DSGLUE(*._tcp., NSEC, *._tcp.ns1.example.com. TLSA)
+IN DS $DSGLUE(*._tcp., NSEC, *._tcp.ns1.example.com. TLSA)
 ~~~
 
 # Security Considerations
@@ -232,7 +242,7 @@ Nameservers supporting authenticated encryption MAY indicate any DANE mode, or n
 
 As an optimization, nameservers using DANE MAY place a TLSA record in the DSGLUE to avoid the latency of a TLSA lookup during delegation.  However, child zones should be aware that this adds complexity and delay to the process of TLSA key rotation.
 
-Resolvers that support authenticated encryption MAY implement support for PKI-based authentication, DANE, or both.  PKI-only resolvers MUST nonetheless resolve TLSA records, and MUST NOT require authentication if the DANE mode is DANE-TA(2) or DANE-EE(3) {{!RFC7671}}.  DANE-only resolvers MUST NOT require authentication if a TLSA record is absent.
+Resolvers that support authenticated encryption MAY implement support for PKI-based authentication, DANE, or both.  PKI-only resolvers MUST nonetheless resolve TLSA records, and MUST NOT require authentication if the DANE mode is DANE-TA(2) or DANE-EE(3) {{!RFC7671}}.  DANE-only resolvers MUST NOT require authentication if the TLSA record does not exist.
 
 # IANA Considerations {#iana}
 
