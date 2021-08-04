@@ -301,7 +301,7 @@ Table of Contents
 
 4.4.1.  Disabling DANE
 
-   Resolvers can check whether a nameserver supports DANE by resolving a
+   Resolvers check whether a nameserver supports DANE by resolving a
    TLSA record during the delegation process.  However, this adds
    unnecessary latency to the delegation if the nameserver does not
    implement DANE.  As an optimization, such nameservers can add an NSEC
