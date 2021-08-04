@@ -129,11 +129,19 @@ Table of Contents
 3.1.  Encoding
 
    To encode a resource record R, we first transform it into a DNSKEY
-   pseudo-record K as follows: * Owner Name of K = The Owner Name of R
-   relative to the child zone apex. * Flags = 0x0001, i.e. only SEP (bit
-   15) is set. * Protocol = 3 * Algorithm = DSGLUE (number TBD) * Public
-   Key = The RR type of R, followed by the RDATA of R in canonical RR
-   form ([RFC4034], Section 6.2).
+   pseudo-record K as follows:
+
+   *  Owner Name of K = The Owner Name of R relative to the child zone
+      apex.
+
+   *  Flags = 0x0001, i.e. only SEP (bit 15) is set.
+
+   *  Protocol = 3
+
+   *  Algorithm = DSGLUE (number TBD)
+
+   *  Public Key = The RR type of R, followed by the RDATA of R in
+      canonical RR form ([RFC4034], Section 6.2).
 
    For example, this RRSet:
 
