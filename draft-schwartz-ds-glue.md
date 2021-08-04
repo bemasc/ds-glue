@@ -238,6 +238,8 @@ When records are present in both ordinary glue and DSGLUE, the response size is 
 
 ## PKI and DANE for Authenticated Encryption
 
+> TODO: Maybe move this into a different draft.
+
 Nameservers supporting authenticated encryption MAY indicate any DANE mode, or none at all.
 
 As an optimization, nameservers using DANE MAY place a TLSA record in the DSGLUE to avoid the latency of a TLSA lookup during delegation.  However, child zones should be aware that this adds complexity and delay to the process of TLSA key rotation.
