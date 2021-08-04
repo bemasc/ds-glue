@@ -353,6 +353,8 @@ Table of Contents
 
 6.3.  PKI and DANE for Authenticated Encryption
 
+      TODO: Maybe move this into a different draft.
+
    Nameservers supporting authenticated encryption MAY indicate any DANE
    mode, or none at all.
 
