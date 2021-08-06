@@ -194,12 +194,13 @@ A zone in this configuration can optionally use an NSEC DSGLUE record to indicat
 $ORIGIN com.
 example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
-            IN DS $DSGLUE(*., NSEC, *.example.com. A SVCB)
+            IN DS $DSGLUE(ns1., NSEC, ns1.example.com. AAAA)
+            IN DS $DSGLUE(_dns.ns1., NSEC, _dns.ns1.example.com.)
 ~~~
 
 This arrangement prevents an adversary from inserting their own A or SVCB records into the delegation response.
 
-Note that although this NSEC record denies the existence of any A records in *.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
+Note that although this NSEC record denies the existence of any A records for ns1.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
 
 ## Delegation with authenticated encryption
 
@@ -219,7 +220,7 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
 Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process.  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record:
 
 ~~~
-IN DS $DSGLUE(*._tcp., NSEC, *._tcp.ns1.example.com. TLSA)
+IN DS $DSGLUE(_853._tcp.ns1, NSEC, _853._tcp.ns1.example.com.)
 ~~~
 
 # Security Considerations
