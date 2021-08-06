@@ -28,7 +28,7 @@ informative:
 
 --- abstract
 
-This draft describes a mechanism for conveying arbitrary authenticated DNS data from a parent nameserver to a recursive resolver as part of an in-bailiwick delegation response.
+This draft describes a mechanism for conveying arbitrary authenticated DNS data from a parent nameserver to a recursive resolver as part of a delegation response.
 
 --- middle
 
@@ -44,25 +44,33 @@ The DPRIVE working group has been pursuing designs for authenticated encryption 
 
 Glue records in DNS referral responses are unauthenticated.  Parents do not generally provide RRSIGs for these records in their responses, and resolvers do not expect such signatures to be present.  An in-path attacker can modify or remove records in the delegation response without detection.
 
+If the parent zone also implements authenticated encryption, this provides sufficient protection for the glue records, but many important parent zones seem unlikely to implement authenticated encryption in the near future.
+
 ## Obstacle 2: Flexibility
 
-Existing nameserver deployments assume that the delegation response includes only a fixed set of existing RR types (NS, A, AAAA, DS, RRSIG, etc.).  These systems are slow to upgrade, and we would like to be able to begin deploying authenticated encryption without first requiring a significant change in these parents.
+Existing nameserver deployments assume that the delegation response includes only a fixed set of existing RR types (NS, A, AAAA, DS, RRSIG, etc.).  These systems are slow to upgrade, and the working group would like to be able to begin deploying authenticated encryption without first requiring a significant change in these parents.
 
 # Proposal
 
-We propose to convey glue RRs in DS records, enabling authenticated delivery of arbitrary RR types as part of the delegation response.
+This draft proposes a way to convey glue RRs in DS records, enabling authenticated delivery of arbitrary RR types as part of the delegation response.
+
+There are three main records involved in this process:
+
+* A Source Record to be conveyed, which may be of any RR type and anywhere below the zone cut.
+* A Virtual DNSKEY Record encapsulating the Source Record.
+* The DSGLUE Record, a DS record derived from the Virtual DNSKEY Record and published in the parent.
 
 ## Encoding {#encoding}
 
-To encode a resource record R, we first transform it into a DNSKEY pseudo-record K as follows:
+To encode a Source Record, a zone operator first transforms it into a Virtual DNSKEY Record as follows:
 
-* Owner Name of K = The Owner Name of R relative to the child zone apex.
+* Owner Name = The Owner Name of the Source Record relative to the child zone apex.
 * Flags = 0x0001, i.e. only SEP (bit 15) is set.
 * Protocol = 3
-* Algorithm = DSGLUE (number TBD)
-* Public Key = The RR type of R, followed by the RDATA of R in canonical RR form ({{!RFC4034, Section 6.2}}).
+* Algorithm = DS Glue (see IANA registration in {{iana}})
+* Public Key = The RR type and canonicalized RDATA of the Source Record ({{!RFC4034, Section 6.2}}).
 
-For example, this RRSet:
+For example, these Source Records:
 
 ~~~
 $ORIGIN example.com.
@@ -71,26 +79,24 @@ $ORIGIN example.com.
        IN NS NS.OTHER.EXAMPLE.
 ~~~
 
-would be represented as the following pseudo-records (in C-like pseudo-zone-file syntax):
+would be represented as the following Virtual DNSKEY Records:
 
 ~~~
-. 300 IN DNSKEY 1 3 TBD base64(
-      "\x00\x02" ; RR type = NS
-      "\x03ns1\x07example\x03com\x00"
-    )
-      IN DNSKEY 1 3 TBD base64(
-      "\x00\x02" ; RR type = NS
-      "\x03ns2\x07example\x03com\x00"
-    )
-      IN DNSKEY 1 3 TBD base64(
-      "\x00\x02" ; RR type = NS
-      "\x02ns\x05other\x07example\x00"
-    )
+; Public Key = \000\002 \003ns1\007example\003com\000
+. 300 IN DNSKEY 1 3 $DSGLUE_NUM AAIDbnMxB2V4YW1wbGUDY29tAA==
+; Public Key = \000\002 \003ns2\007example\003com\000
+. 300 IN DNSKEY 1 3 $DSGLUE_NUM AAIDbnMyB2V4YW1wbGUDY29tAA==
+; Public Key = \000\002 \002ns\005other\007example\000
+. 300 IN DNSKEY 1 3 $DSGLUE_NUM AAICbnMFb3RoZXIHZXhhbXBsZQA=
 ~~~
 
-This DNSKEY RRSet's owner name is "." because the NS RRSet appears at the zone apex.  The NS RDATA has been converted to lowercase as specified by the canonicalization algorithm.  These are "pseudo-records" because they do not appear in any zone in this form.
+Note that:
 
-Having constructed the DNSKEY pseudo-record, the DS record is constructed as usual, but always using the VERBATIM digest type {{!I-D.draft-vandijk-dnsop-ds-digest-verbatim}}.  Thus, the final DS wire format RDATA forms the following concatenation:
+* The NS Source Records are "real" records that appear in authoritative Answers and/or delegation glue, but the DNSKEY records are "virtual records" because they do not appear in any zone or response (in this form).
+* The Virtual DNSKEY Records' owner name is "." because the Source Records appear at the zone apex.
+* The NS RDATA has been converted to lowercase as specified by the canonicalization algorithm.
+
+Having constructed a Virtual DNSKEY Record, the DSGLUE Record is constructed as usual, but always using the VERBATIM digest type {{!I-D.draft-vandijk-dnsop-ds-digest-verbatim}}.  Thus, the DSGLUE Record's wire format RDATA forms the following concatenation:
 
 ~~~
 Key Tag | Algorithm = DSGLUE | Digest Type = VERBATIM | Digest = (
@@ -102,29 +108,29 @@ Key Tag | Algorithm = DSGLUE | Digest Type = VERBATIM | Digest = (
 )
 ~~~
 
-This DS record appears in the usual DS RRSet, whose owner name is the child apex.
+The DSGLUE record is a real DS record that appears in the usual DS RRSet, whose owner name is the child apex.
 
-> QUESTION: Should we skip the DNSKEY pseudo-record, and construct the fake DS directly?  This would save 6 bytes per RR, but would lose the ability to reuse DNSKEY->DS construction codepaths (unchanged except for a new digest type).
+> QUESTION: Should we skip the virtual DNSKEY record, and construct the fake DS directly?  This would save 4-6 bytes per RR, but would lose the ability to reuse DNSKEY->DS construction codepaths (unchanged except for a new digest type).
 
 ## Interpretation
 
 Upon receiving the DS RRSet, the recipient will first verify the DS RRSIGs as normal, and abort the resolution as Bogus if DNSSEC validation fails.
 
-Resolvers implementing this specification SHALL reverse the encoding process to extract one or more RRSets, all carrying the TTL of the DS RRSet.  The resolver SHALL add each of these RRSets to the delegation responses, replacing any RRSet with the same owner name and type.  Resolution then proceeds as normal.
+Resolvers implementing this specification SHALL reverse the encoding process of any DSGLUE records to reconstruct the source RRSets, all carrying the TTL of the DS RRSet.  The resolver SHALL add each of these reconstructed RRSets to the delegation responses, replacing any RRSet with the same owner name and type.  Resolution then proceeds as normal.
 
 Resolvers that do not implement this specification will ignore the DSGLUE records due to the unrecognized algorithm.  Thus, these records are safe to use for both signed and unsigned child zones.
 
-As with ordinary glue records, records received in DSGLUE MAY be cached for use in future delegations, but MUST NOT be returned to the stub resolver.
+As with ordinary glue records, Source Records reconstructed from DSGLUE MAY be cached for use in future delegations, but MUST NOT be returned in any responses.
 
 ## Special case: RR Type = NSEC or NSEC3
 
 Normally, the absence of a particular record in a delegation response is not informative to a resolver.  The corresponding record might still exist in the child zone.  To inform the resolver that a particular RRSet is nonexistent for the purposes of delegation, the zone owner MAY place an NSEC or NSEC3 record in the delegation response.
 
-As with other glue records, this NSEC glue record only affects behavior during delegation following (see {{example-nsec}}).
+As with other glue records, an NSEC glue record only affects behavior during delegation following (see example in {{example-nsec}}).
 
 # Examples
 
-For these examples, we define the macro `$DSGLUE(prefix, RR type, rdata)` to construct a DS record as described in {{encoding}}.
+For these examples, the macro `$DSGLUE(prefix, source RR type, source RDATA)` constructs a DSGLUE DS record as described in {{encoding}}.
 
 ## Out-of-bailiwick referral
 
@@ -136,7 +142,7 @@ example 3600 IN NS ns1.example.net.
              IN NS ns2.example.net.
 ~~~
 
-These records would be encoded in DSGLUE as:
+These Source Records would be encoded in DSGLUE as:
 
 ~~~
 $ORIGIN com.
@@ -182,7 +188,7 @@ example    3600 IN NS    ns1.example
 ns1.example 600 IN AAAA  2001:db8::1
 ~~~
 
-A zone in this configuration can use an NSEC DSGLUE record to indicate that there is no IPv4 address:
+A zone in this configuration can optionally use an NSEC DSGLUE record to indicate that there is no IPv4 address:
 
 ~~~
 $ORIGIN com.
@@ -191,7 +197,7 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(*., NSEC, *.example.com. A SVCB)
 ~~~
 
-This arrangement prevents an adversary from inserting their own A (or SVCB) records into the delegation response (e.g. in order to observe the queries).
+This arrangement prevents an adversary from inserting their own A or SVCB records into the delegation response.
 
 Note that although this NSEC record denies the existence of any A records in *.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
 
@@ -220,7 +226,7 @@ IN DS $DSGLUE(*._tcp., NSEC, *._tcp.ns1.example.com. TLSA)
 
 Resolvers that process DSGLUE MUST perform DNSSEC validation.
 
-Records published as DSGLUE have owner names within the child zone, but are signed only by the parent.  This makes them fully authenticated, but provides different cryptographic guarantees than a direct signature by the child.  For example, these records might not appear in any key use logs maintained by the child.
+Source Records published as DSGLUE have owner names within the child zone, but are signed only by the parent.  This makes them fully authenticated, but provides different cryptographic guarantees than a direct signature by the child.  For example, these records might not appear in any key use logs maintained by the child.
 
 # Operational Considerations
 
@@ -228,9 +234,9 @@ Records published as DSGLUE have owner names within the child zone, but are sign
 
 In order for the child to publish DSGLUE records, the parent must allow the child to publish arbitrary DS records or have specific support for this specification.
 
-If the parent supports CDS {{!RFC8078}}, child zones MAY use CDS to push DSGLUE into the parent.  Note that CDNSKEY records cannot be used, because (1) the client cannot publish CDNSKEY records with the required owner name and (2) the client cannot guarantee that the parent will use the VERBATIM digest to produce the DS record.
+If the parent supports CDS {{!RFC8078}}, child zones MAY use CDS to push DSGLUE records into the parent.  Note that CDNSKEY records cannot be used, because (1) the child cannot publish CDNSKEY records with the required owner name and (2) the child cannot guarantee that the parent will use the VERBATIM digest to produce the DS record.
 
-Child zones SHOULD also publish the DSGLUE contents as ordinary records of the specified type at the indicated owner name, in order to enable revalidation {{?I-D.draft-ietf-dnsop-ns-revalidation}} and simplify debugging.
+Child zones SHOULD publish all Source Records as ordinary records of the specified type at the indicated owner name, in order to enable revalidation {{?I-D.draft-ietf-dnsop-ns-revalidation}} and simplify debugging.
 
 ## Referral response size
 
@@ -252,13 +258,13 @@ Resolvers that support authenticated encryption MAY implement support for PKI-ba
 
 IANA is requested to add a new entry to the DNS Security Algorithm Numbers registry:
 
-| Number | Description        | Mnemonic | Zone Signing | Trans. Sec. | Reference       |
-|--------|--------------------|----------|--------------|-------------|-----------------|
-| TBD    | Authenticated Glue | DSGLUE   | N            | ?           | (This document) |
+| Number      | Description        | Mnemonic | Zone Signing | Trans. Sec. | Reference       |
+|-------------|--------------------|----------|--------------|-------------|-----------------|
+| $DSGLUE_NUM | Authenticated Glue | DSGLUE   | N            | ?           | (This document) |
 
 --- back
 
 # Acknowledgments
 {:numbered="false"}
 
-**TODO**
+Thanks to Paul Hoffman for detailed comments.
