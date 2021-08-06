@@ -220,7 +220,7 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
 Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process.  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record:
 
 ~~~
-IN DS $DSGLUE(_853._tcp.ns1, NSEC, _853._tcp.ns1.example.com.)
+IN DS $DSGLUE(_853._tcp.ns1., NSEC, _853._tcp.ns1.example.com.)
 ~~~
 
 # Security Considerations
