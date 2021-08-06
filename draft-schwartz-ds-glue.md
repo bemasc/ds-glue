@@ -198,9 +198,9 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(_dns.ns1., NSEC, _dns.ns1.example.com.)
 ~~~
 
-This arrangement prevents an adversary from inserting their own A or SVCB records into the delegation response.
+This arrangement prevents an adversary from inserting forged A or SVCB records for ns1.example.com into the delegation response.
 
-Note that although this NSEC record denies the existence of any A records for ns1.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
+Note that although there is an NSEC record denying the existence of A records for ns1.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
 
 ## Delegation with authenticated encryption
 
