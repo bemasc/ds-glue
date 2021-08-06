@@ -334,7 +334,7 @@ Table of Contents
    implement DANE.  As an optimization, such nameservers can add an NSEC
    record to indicate that there is no such TLSA record:
 
-   IN DS $DSGLUE(_853._tcp.ns1, NSEC, _853._tcp.ns1.example.com.)
+   IN DS $DSGLUE(_853._tcp.ns1., NSEC, _853._tcp.ns1.example.com.)
 
 5.  Security Considerations
 
