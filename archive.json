@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-08-05T00:34:56.185123+00:00",
+  "timestamp": "2021-08-08T00:34:18.704274+00:00",
   "repo": "bemasc/ds-glue",
   "labels": [
     {
@@ -49,6 +49,50 @@
       "color": "ffffff"
     }
   ],
-  "issues": [],
-  "pulls": []
+  "issues": [
+    {
+      "number": 2,
+      "id": "MDU6SXNzdWU5NjMyNjMxNTM=",
+      "title": "Adding and replacing in delegation responses",
+      "url": "https://github.com/bemasc/ds-glue/issues/2",
+      "state": "OPEN",
+      "author": "paulehoffman",
+      "authorAssociation": "NONE",
+      "assignees": [],
+      "labels": [],
+      "body": "Section 3.2 says: `The resolver SHALL add each of these reconstructed RRSets to the delegation responses, replacing any RRSet with the same owner name and type.` It feels wrong to say that the resolver changes the delegation response: the response is just a response. For example, a resolver that is logging responses should not alter what it logs based on the reconstructed RRSets. \r\n\r\nShould this instead talk about filling the resolver's cache? Does it add to the cache, and replace cached entries, from the reconstructed RRsets? Getting the DS data is a step before the resolver looks in its cache to determine what to do for its next step (possibly using secure transport for the following query).",
+      "createdAt": "2021-08-07T16:38:46Z",
+      "updatedAt": "2021-08-07T16:38:46Z",
+      "closedAt": null,
+      "comments": []
+    }
+  ],
+  "pulls": [
+    {
+      "number": 1,
+      "id": "MDExOlB1bGxSZXF1ZXN0NzA1Njg3NDE4",
+      "title": "Fix NSEC examples",
+      "url": "https://github.com/bemasc/ds-glue/pull/1",
+      "state": "OPEN",
+      "author": "bemasc",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Reported by Ilari Liusvaara",
+      "createdAt": "2021-08-06T19:02:19Z",
+      "updatedAt": "2021-08-06T19:48:13Z",
+      "baseRepository": "bemasc/ds-glue",
+      "baseRefName": "main",
+      "baseRefOid": "178e0f2fe8f1b51fe61f4ee19a16506f1144b6dc",
+      "headRepository": "bemasc/ds-glue",
+      "headRefName": "fix-nsec-examples",
+      "headRefOid": "cb546a167235ac1d81e73e7f7f39297d7f689da9",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    }
+  ]
 }
