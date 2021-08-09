@@ -4,8 +4,8 @@
 
 dprive                                                       B. Schwartz
 Internet-Draft                                                Google LLC
-Intended status: Standards Track                           6 August 2021
-Expires: 7 February 2022
+Intended status: Standards Track                           9 August 2021
+Expires: 10 February 2022
 
 
          Authenticated delegation information using DS records
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 February 2022.
+   This Internet-Draft will expire on 10 February 2022.
 
 Copyright Notice
 
@@ -212,24 +212,31 @@ Table of Contents
 
 3.2.  Interpretation
 
-   Upon receiving the DS RRSet, the recipient will first verify the DS
-   RRSIGs as normal, and abort the resolution as Bogus if DNSSEC
-   validation fails.
+   Upon receiving a delegation response, resolvers implementing this
+   specification SHALL compute the Adjusted Delegation Response as
+   follows:
 
-   Resolvers implementing this specification SHALL reverse the encoding
-   process of any DSGLUE records to reconstruct the source RRSets, all
-   carrying the TTL of the DS RRSet.  The resolver SHALL add each of
-   these reconstructed RRSets to the delegation responses, replacing any
-   RRSet with the same owner name and type.  Resolution then proceeds as
-   normal.
+   1.  Copy the delegation response.
+
+   2.  Reverse the encoding process of any DSGLUE records to reconstruct
+       the source RRSets, all carrying the TTL of the DS RRSet.
+
+   3.  Add each of these reconstructed RRSets to the Adjusted Delegation
+       Response, replacing any RRSet with the same owner name and type.
+
+   Resolution then proceeds as usual, using the Adjusted Delegation
+   Response.  When processing the DS RRSet, the recipient will verify
+   the DS RRSIGs as usual, and abort the resolution as Bogus if DNSSEC
+   validation fails.
 
    Resolvers that do not implement this specification will ignore the
    DSGLUE records due to the unrecognized algorithm.  Thus, these
    records are safe to use for both signed and unsigned child zones.
 
-   As with ordinary glue records, Source Records reconstructed from
-   DSGLUE MAY be cached for use in future delegations, but MUST NOT be
-   returned in any responses.
+   Source Records reconstructed from DSGLUE SHOULD be processed exactly
+   like ordinary unauthenticated glue records.  For example, they MAY be
+   cached for use in future delegations but MUST NOT be returned in any
+   responses (c.f.  Section 5.4.1 of [RFC2181]).
 
 3.3.  Special case: RR Type = NSEC or NSEC3
 
@@ -458,6 +465,10 @@ Table of Contents
               Work in Progress, Internet-Draft, draft-schwartz-svcb-dns-
               04, 26 July 2021, <https://datatracker.ietf.org/doc/html/
               draft-schwartz-svcb-dns-04>.
+
+   [RFC2181]  Elz, R. and R. Bush, "Clarifications to the DNS
+              Specification", RFC 2181, DOI 10.17487/RFC2181, July 1997,
+              <https://datatracker.ietf.org/doc/html/rfc2181>.
 
 Acknowledgments
 
