@@ -114,13 +114,17 @@ The DSGLUE record is a real DS record that appears in the usual DS RRSet, whose 
 
 ## Interpretation
 
-Upon receiving the DS RRSet, the recipient will first verify the DS RRSIGs as normal, and abort the resolution as Bogus if DNSSEC validation fails.
+Upon receiving a delegation response, resolvers implementing this specification SHALL compute the Adjusted Delegation Response as follows:
 
-Resolvers implementing this specification SHALL reverse the encoding process of any DSGLUE records to reconstruct the source RRSets, all carrying the TTL of the DS RRSet.  The resolver SHALL add each of these reconstructed RRSets to the delegation responses, replacing any RRSet with the same owner name and type.  Resolution then proceeds as normal.
+1. Copy the delegation response.
+2. Reverse the encoding process of any DSGLUE records to reconstruct the source RRSets, all carrying the TTL of the DS RRSet.
+3. Add each of these reconstructed RRSets to the Adjusted Delegation Response, replacing any RRSet with the same owner name and type.
+
+Resolution then proceeds as usual, using the Adjusted Delegation Response.  When processing the DS RRSet, the recipient will verify the DS RRSIGs as usual, and abort the resolution as Bogus if DNSSEC validation fails.
 
 Resolvers that do not implement this specification will ignore the DSGLUE records due to the unrecognized algorithm.  Thus, these records are safe to use for both signed and unsigned child zones.
 
-As with ordinary glue records, Source Records reconstructed from DSGLUE MAY be cached for use in future delegations, but MUST NOT be returned in any responses.
+Source Records reconstructed from DSGLUE SHOULD be processed exactly like ordinary unauthenticated glue records.  For example, they MAY be cached for use in future delegations but MUST NOT be returned in any responses (c.f. {{Section 5.4.1 of ?RFC2181}}).
 
 ## Special case: RR Type = NSEC or NSEC3
 
