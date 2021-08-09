@@ -116,8 +116,9 @@ The DSGLUE record is a real DS record that appears in the usual DS RRSet, whose 
 
 Upon receiving a delegation response, resolvers implementing this specification SHALL compute the Adjusted Delegation Response as follows:
 
-1. Reverse the encoding process of any DSGLUE records to reconstruct the source RRSets, all carrying the TTL of the DS RRSet.
-2. Add each of these reconstructed RRSets to the delegation response, replacing any RRSet with the same owner name and type.
+1. Copy the delegation response.
+2. Reverse the encoding process of any DSGLUE records to reconstruct the source RRSets, all carrying the TTL of the DS RRSet.
+3. Add each of these reconstructed RRSets to the Adjusted Delegation Response, replacing any RRSet with the same owner name and type.
 
 Resolution then proceeds as usual, using the Adjusted Delegation Response.  When processing the DS RRSet, the recipient will verify the DS RRSIGs as usual, and abort the resolution as Bogus if DNSSEC validation fails.
 
