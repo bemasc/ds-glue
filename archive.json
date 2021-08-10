@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-08-08T00:34:18.704274+00:00",
+  "timestamp": "2021-08-10T00:36:06.701045+00:00",
   "repo": "bemasc/ds-glue",
   "labels": [
     {
@@ -55,16 +55,31 @@
       "id": "MDU6SXNzdWU5NjMyNjMxNTM=",
       "title": "Adding and replacing in delegation responses",
       "url": "https://github.com/bemasc/ds-glue/issues/2",
-      "state": "OPEN",
+      "state": "CLOSED",
       "author": "paulehoffman",
       "authorAssociation": "NONE",
       "assignees": [],
       "labels": [],
       "body": "Section 3.2 says: `The resolver SHALL add each of these reconstructed RRSets to the delegation responses, replacing any RRSet with the same owner name and type.` It feels wrong to say that the resolver changes the delegation response: the response is just a response. For example, a resolver that is logging responses should not alter what it logs based on the reconstructed RRSets. \r\n\r\nShould this instead talk about filling the resolver's cache? Does it add to the cache, and replace cached entries, from the reconstructed RRsets? Getting the DS data is a step before the resolver looks in its cache to determine what to do for its next step (possibly using secure transport for the following query).",
       "createdAt": "2021-08-07T16:38:46Z",
-      "updatedAt": "2021-08-07T16:38:46Z",
-      "closedAt": null,
-      "comments": []
+      "updatedAt": "2021-08-09T15:49:29Z",
+      "closedAt": "2021-08-09T15:49:29Z",
+      "comments": [
+        {
+          "author": "bemasc",
+          "authorAssociation": "OWNER",
+          "body": "My impression is that resolvers are under no obligation to cache anything, especially glue records, so I'd like to avoid using that framing.  I've added more detail to the description in #3; please review.",
+          "createdAt": "2021-08-09T15:26:55Z",
+          "updatedAt": "2021-08-09T15:26:55Z"
+        },
+        {
+          "author": "paulehoffman",
+          "authorAssociation": "NONE",
+          "body": "Agree that #3 addresses this, so am closing.",
+          "createdAt": "2021-08-09T15:49:29Z",
+          "updatedAt": "2021-08-09T15:49:29Z"
+        }
+      ]
     }
   ],
   "pulls": [
@@ -91,6 +106,34 @@
       "mergedAt": null,
       "mergedBy": null,
       "mergeCommit": null,
+      "comments": [],
+      "reviews": []
+    },
+    {
+      "number": 3,
+      "id": "MDExOlB1bGxSZXF1ZXN0NzA2NTg2MDE0",
+      "title": "Clarify interpretation of DSGLUE by resolvers",
+      "url": "https://github.com/bemasc/ds-glue/pull/3",
+      "state": "MERGED",
+      "author": "bemasc",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "Fixes #2",
+      "createdAt": "2021-08-09T14:45:08Z",
+      "updatedAt": "2021-08-09T16:26:35Z",
+      "baseRepository": "bemasc/ds-glue",
+      "baseRefName": "main",
+      "baseRefOid": "178e0f2fe8f1b51fe61f4ee19a16506f1144b6dc",
+      "headRepository": "bemasc/ds-glue",
+      "headRefName": "adjusted-response",
+      "headRefOid": "232a70574cca2f454b5efb2e4dd6d961f9fd1669",
+      "closedAt": "2021-08-09T16:04:47Z",
+      "mergedAt": "2021-08-09T16:04:47Z",
+      "mergedBy": "bemasc",
+      "mergeCommit": {
+        "oid": "ef0808483e2ee58c9784440e6d82832d90643cce"
+      },
       "comments": [],
       "reviews": []
     }
