@@ -195,7 +195,6 @@ $ORIGIN com.
 example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
             IN DS $DSGLUE(ns1., NSEC, ns1.example.com. AAAA)
-            IN DS $DSGLUE(_dns.ns1., NSEC, _dns.ns1.example.com.)
 ~~~
 
 This arrangement prevents an adversary from inserting forged records for ns1.example.com or _dns.ns1.example.com into the delegation response.
@@ -217,10 +216,11 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
 
 ### Disabling DANE {#no-dane}
 
-Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process ({{tlsa}}).  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record, e.g.:
+Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process ({{tlsa}}).  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add NSEC records to indicate that there is no such TLSA record, e.g.:
 
 ~~~
-IN DS $DSGLUE(_853._tcp.ns1., NSEC, _853._tcp.ns1.example.com.)
+IN DS $DSGLUE(ns1., NSEC, _dns.ns1.example.com. A AAAA)
+IN DS $DSGLUE(_dns.ns1., NSEC, ns1.example.com. SVCB)
 ~~~
 
 # Security Considerations
