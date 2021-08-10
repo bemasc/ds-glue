@@ -198,7 +198,7 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
             IN DS $DSGLUE(_dns.ns1., NSEC, _dns.ns1.example.com.)
 ~~~
 
-This arrangement prevents an adversary from inserting forged A or SVCB records for ns1.example.com into the delegation response.
+This arrangement prevents an adversary from inserting forged records for ns1.example.com or _dns.ns1.example.com into the delegation response.
 
 Note that although there is an NSEC record denying the existence of A records for ns1.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
 
@@ -217,7 +217,7 @@ example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
 
 ### Disabling DANE {#no-dane}
 
-Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process.  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record:
+Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process ({{tlsa}}).  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an NSEC record to indicate that there is no such TLSA record, e.g.:
 
 ~~~
 IN DS $DSGLUE(_853._tcp.ns1., NSEC, _853._tcp.ns1.example.com.)
@@ -243,7 +243,7 @@ Child zones SHOULD publish all Source Records as ordinary records of the specifi
 
 When records are present in both ordinary glue and DSGLUE, the response size is approximately doubled.  This could cause performance issues due to response truncation when the initial query is over UDP.
 
-## PKI and DANE for Authenticated Encryption
+## PKI and DANE for Authenticated Encryption {#tlsa}
 
 > TODO: Move some of this text into a different draft.
 
