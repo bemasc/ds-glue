@@ -4,8 +4,8 @@
 
 dprive                                                       B. Schwartz
 Internet-Draft                                                Google LLC
-Intended status: Standards Track                           6 August 2021
-Expires: 7 February 2022
+Intended status: Standards Track                          10 August 2021
+Expires: 11 February 2022
 
 
          Authenticated delegation information using DS records
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 7 February 2022.
+   This Internet-Draft will expire on 11 February 2022.
 
 Copyright Notice
 
@@ -305,8 +305,9 @@ Table of Contents
                IN DS $DSGLUE(ns1., NSEC, ns1.example.com. AAAA)
                IN DS $DSGLUE(_dns.ns1., NSEC, _dns.ns1.example.com.)
 
-   This arrangement prevents an adversary from inserting forged A or
-   SVCB records for ns1.example.com into the delegation response.
+   This arrangement prevents an adversary from inserting forged records
+   for ns1.example.com or _dns.ns1.example.com into the delegation
+   response.
 
    Note that although there is an NSEC record denying the existence of A
    records for ns1.example.com, it is treated as a glue record that only
@@ -329,10 +330,11 @@ Table of Contents
 4.4.1.  Disabling DANE
 
    Resolvers check whether a nameserver supports DANE by resolving a
-   TLSA record during the delegation process.  However, this adds
-   unnecessary latency to the delegation if the nameserver does not
-   implement DANE.  As an optimization, such nameservers can add an NSEC
-   record to indicate that there is no such TLSA record:
+   TLSA record during the delegation process (Section 6.3).  However,
+   this adds unnecessary latency to the delegation if the nameserver
+   does not implement DANE.  As an optimization, such nameservers can
+   add an NSEC record to indicate that there is no such TLSA record,
+   e.g.:
 
    IN DS $DSGLUE(_853._tcp.ns1., NSEC, _853._tcp.ns1.example.com.)
 
@@ -416,9 +418,9 @@ Table of Contents
    [I-D.draft-vandijk-dnsop-ds-digest-verbatim]
               Dijk, P. V., "The VERBATIM Digest Algorithm for DS
               records", Work in Progress, Internet-Draft, draft-vandijk-
-              dnsop-ds-digest-verbatim-00, 25 September 2020,
+              dnsop-ds-digest-verbatim-01, 10 August 2021,
               <https://datatracker.ietf.org/doc/html/draft-vandijk-
-              dnsop-ds-digest-verbatim-00>.
+              dnsop-ds-digest-verbatim-01>.
 
    [RFC2119]  Bradner, S., "Key words for use in RFCs to Indicate
               Requirement Levels", BCP 14, RFC 2119,
