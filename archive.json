@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-08-10T00:36:06.701045+00:00",
+  "timestamp": "2021-08-12T00:34:25.441553+00:00",
   "repo": "bemasc/ds-glue",
   "labels": [
     {
@@ -88,24 +88,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NzA1Njg3NDE4",
       "title": "Fix NSEC examples",
       "url": "https://github.com/bemasc/ds-glue/pull/1",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "bemasc",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "Reported by Ilari Liusvaara",
       "createdAt": "2021-08-06T19:02:19Z",
-      "updatedAt": "2021-08-06T19:48:13Z",
+      "updatedAt": "2021-08-10T16:57:05Z",
       "baseRepository": "bemasc/ds-glue",
       "baseRefName": "main",
       "baseRefOid": "178e0f2fe8f1b51fe61f4ee19a16506f1144b6dc",
       "headRepository": "bemasc/ds-glue",
       "headRefName": "fix-nsec-examples",
-      "headRefOid": "cb546a167235ac1d81e73e7f7f39297d7f689da9",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "cbf54ee10dadd5600289ee72bad8cd1b2b017879",
+      "closedAt": "2021-08-10T16:56:48Z",
+      "mergedAt": "2021-08-10T16:56:48Z",
+      "mergedBy": "bemasc",
+      "mergeCommit": {
+        "oid": "83f227996d3c3980e645fd90cf055b5d6c097185"
+      },
       "comments": [],
       "reviews": []
     },
