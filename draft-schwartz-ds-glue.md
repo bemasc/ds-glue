@@ -142,6 +142,8 @@ DSGLUE records are capable of containing any record type.  However, the meaning 
 
 Recipients implementing this specification MUST accept the NS, A, and AAAA RR types in DSGLUE.  Support for the other allowed RR types is OPTIONAL.
 
+Recipients MUST ignore any unauthenticated TLSA records.
+
 # Examples
 
 For these examples, the macro `$DSGLUE(prefix, RR type, TTL, [RDATAs])` constructs a DSGLUE DS record as described in {{encoding}}.
