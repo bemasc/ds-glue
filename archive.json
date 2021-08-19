@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-08-12T00:34:25.441553+00:00",
+  "timestamp": "2021-08-19T00:29:16.497977+00:00",
   "repo": "bemasc/ds-glue",
   "labels": [
     {
@@ -138,6 +138,77 @@
       },
       "comments": [],
       "reviews": []
+    },
+    {
+      "number": 4,
+      "id": "MDExOlB1bGxSZXF1ZXN0NzE0NTUxNDQ1",
+      "title": "Remove use of NSEC and restructure around RRSets",
+      "url": "https://github.com/bemasc/ds-glue/pull/4",
+      "state": "OPEN",
+      "author": "bemasc",
+      "authorAssociation": "OWNER",
+      "assignees": [],
+      "labels": [],
+      "body": "I've been unable to get the NSEC logic correct here, and feedback\r\nsuggests that it is likely to be more difficult to implement than\r\nanticipated.  This version provides a more limited form of authenticated\r\nnonexistence using empty RRSets, which required moving to an\r\nRRSet-oriented format.",
+      "createdAt": "2021-08-17T20:40:14Z",
+      "updatedAt": "2021-08-18T23:27:56Z",
+      "baseRepository": "bemasc/ds-glue",
+      "baseRefName": "main",
+      "baseRefOid": "83f227996d3c3980e645fd90cf055b5d6c097185",
+      "headRepository": "bemasc/ds-glue",
+      "headRefName": "no-nsec",
+      "headRefOid": "96a3525472cd04a694b21a0bfc086ab21a47542c",
+      "closedAt": null,
+      "mergedAt": null,
+      "mergedBy": null,
+      "mergeCommit": null,
+      "comments": [],
+      "reviews": [
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzMzNDIxNzIz",
+          "commit": {
+            "abbreviatedOid": "96a3525"
+          },
+          "author": "puneetsood",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "Mostly LGTM - matches my understanding of our discussion.\r\n",
+          "createdAt": "2021-08-18T23:05:42Z",
+          "updatedAt": "2021-08-18T23:27:56Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Either in this sentence (or the next sentence) clarify if all child zone RRs to be encoded end up in a single DSGLUE RR or multiple DSGLUE RRs.\r\n\r\nReading line 59 below, it seems like each child zone RR ends up in its own DSGLUE RR.",
+              "createdAt": "2021-08-18T23:05:42Z",
+              "updatedAt": "2021-08-18T23:27:56Z"
+            },
+            {
+              "originalPosition": 177,
+              "body": "How does this matter? If the resolver is processing the DSGLUE records, will it not automatically ignore the unprotected A/AAAA records in the ADDL section in the response? ",
+              "createdAt": "2021-08-18T23:13:53Z",
+              "updatedAt": "2021-08-18T23:27:56Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "Explicitly list the RR types which should be supported (not always included): NS, A, AAAA.\r\nProbably better to point to the new IANA registry described towards the end of the document.\r\n",
+              "createdAt": "2021-08-18T23:15:11Z",
+              "updatedAt": "2021-08-18T23:27:56Z"
+            },
+            {
+              "originalPosition": 180,
+              "body": "If we are getting trusted glue in the delegation response, what is the incentive to re-resolve the in-bailiwick NS names? Any secure resolution of the NS name could only happen over the DoT channel established after processing the DSGLUE RRs.\r\n\r\n",
+              "createdAt": "2021-08-18T23:17:01Z",
+              "updatedAt": "2021-08-18T23:27:56Z"
+            },
+            {
+              "originalPosition": 214,
+              "body": "I would prefer to not allow adding TLSA RRs to the DSGLUE (other than the presence/absence bit).",
+              "createdAt": "2021-08-18T23:25:52Z",
+              "updatedAt": "2021-08-18T23:27:56Z"
+            }
+          ]
+        }
+      ]
     }
   ]
 }
