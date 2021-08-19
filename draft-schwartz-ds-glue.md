@@ -264,6 +264,8 @@ Nameservers supporting authenticated encryption MAY indicate any DANE mode, or n
 
 As an optimization, nameservers using DANE MAY place a TLSA record in the DSGLUE to avoid the latency of a TLSA lookup during delegation.  However, child zones should be aware that this adds complexity and delay to the process of TLSA key rotation.
 
+> QUESTION: Should we recommend for or against including nonempty TLSA in DSGLUE?  If CDS-like update mechanisms work well, and ADoT-DANE is widely deployed, this could warrant a positive recommendation.  Conversely, if rotation is error-prone, and ADoT-DANE is rare, a negative recommendation might be better.
+
 Nameservers that support PKI-based authentication but not DANE SHOULD deny the TLSA RRSet in the DSGLUE, as shown in {{no-dane}}, to avoid an unnecessary delay.
 
 Resolvers that support authenticated encryption MAY implement support for PKI-based authentication, DANE, or both.  PKI-only resolvers MUST nonetheless resolve TLSA records, and MUST NOT require authentication if the DANE mode is DANE-TA(2) or DANE-EE(3) {{!RFC7671}}.  DANE-only resolvers MUST NOT require authentication if the TLSA record does not exist.
