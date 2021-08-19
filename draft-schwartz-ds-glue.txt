@@ -77,9 +77,10 @@ Table of Contents
        4.4.1.  Disabling DANE
    5.  Security Considerations
    6.  Operational Considerations
-     6.1.  Publishing DSGLUE records
-     6.2.  Referral response size
-     6.3.  PKI and DANE for Authenticated Encryption
+     6.1.  Compatibility with existing resolvers
+     6.2.  Publishing DSGLUE records
+     6.3.  Referral response size
+     6.4.  PKI and DANE for Authenticated Encryption
    7.  IANA Considerations
    8.  References
      8.1.  Normative References
@@ -354,7 +355,7 @@ Table of Contents
 4.4.1.  Disabling DANE
 
    Resolvers check whether a nameserver supports DANE by resolving a
-   TLSA record during the delegation process (Section 6.3).  However,
+   TLSA record during the delegation process (Section 6.4).  However,
    this adds unnecessary latency to the delegation if the nameserver
    does not implement DANE.  As an optimization, such nameservers can
    add an empty DSGLUE RRSet to indicate that there is no such TLSA
@@ -374,7 +375,13 @@ Table of Contents
 
 6.  Operational Considerations
 
-6.1.  Publishing DSGLUE records
+6.1.  Compatibility with existing resolvers
+
+   Resolver support for DSGLUE is OPTIONAL, so child zones MUST continue
+   to place ordinary NS, A, and AAAA records in the parent zone as
+   needed for non-DSGLUE resolution.
+
+6.2.  Publishing DSGLUE records
 
    In order for the child to publish DSGLUE records, the parent must
    allow the child to publish arbitrary DS records or have specific
@@ -391,13 +398,13 @@ Table of Contents
    revalidation [I-D.draft-ietf-dnsop-ns-revalidation] and simplify
    debugging.
 
-6.2.  Referral response size
+6.3.  Referral response size
 
    When records are present in both ordinary glue and DSGLUE, the
    response size is approximately doubled.  This could cause performance
    issues due to response truncation when the initial query is over UDP.
 
-6.3.  PKI and DANE for Authenticated Encryption
+6.4.  PKI and DANE for Authenticated Encryption
 
       TODO: Move some of this text into a different draft.
 
@@ -525,7 +532,8 @@ Table of Contents
 
 Acknowledgments
 
-   Thanks to Paul Hoffman for detailed comments.
+   Thanks to Paul Hoffman, Ilari Liusvaara, Puneet Sood, and Alexandar
+   Mayrhofer for detailed comments.
 
 Author's Address
 
