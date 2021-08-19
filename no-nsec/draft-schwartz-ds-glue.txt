@@ -270,6 +270,8 @@ Table of Contents
    AAAA RR types in DSGLUE.  Support for the other allowed RR types is
    OPTIONAL.
 
+   Recipients MUST ignore any unauthenticated TLSA records.
+
 4.  Examples
 
    For these examples, the macro "$DSGLUE(prefix, RR type, TTL,
