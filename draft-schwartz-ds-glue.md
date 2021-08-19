@@ -52,7 +52,7 @@ Existing nameserver deployments assume that the delegation response includes onl
 
 # Proposal
 
-This draft proposes a way to convey glue RRSets in DS records, enabling authenticated delivery of arbitrary RR types as part of the delegation response.
+This draft proposes a way to convey a glue RRSet inside a DS record, enabling authenticated delivery of arbitrary RR types as part of the delegation response.
 
 There are three main records or RRSets involved in this process:
 
@@ -139,6 +139,8 @@ Source Records reconstructed from DSGLUE SHOULD be processed exactly like ordina
 ## Allowed RR types
 
 DSGLUE records are capable of containing any record type.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, child zones MUST only publish DSGLUE records containing RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.
+
+Recipients implementing this specification MUST accept the NS, A, and AAAA RR types in DSGLUE.  Support for the other allowed RR types is OPTIONAL.
 
 # Examples
 
