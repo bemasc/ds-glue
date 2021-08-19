@@ -244,6 +244,10 @@ Source Records published as DSGLUE have owner names within the child zone, but a
 
 # Operational Considerations
 
+## Compatibility with existing resolvers
+
+Resolver support for DSGLUE is OPTIONAL, so child zones MUST continue to place ordinary NS, A, and AAAA records in the parent zone as needed for non-DSGLUE resolution.
+
 ## Publishing DSGLUE records
 
 In order for the child to publish DSGLUE records, the parent must allow the child to publish arbitrary DS records or have specific support for this specification.
@@ -298,4 +302,4 @@ The initial contents are as follows:
 # Acknowledgments
 {:numbered="false"}
 
-Thanks to Paul Hoffman for detailed comments.
+Thanks to Paul Hoffman, Ilari Liusvaara, Puneet Sood, and Alexandar Mayrhofer for detailed comments.
