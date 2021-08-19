@@ -4,8 +4,8 @@
 
 dprive                                                       B. Schwartz
 Internet-Draft                                                Google LLC
-Intended status: Standards Track                          17 August 2021
-Expires: 18 February 2022
+Intended status: Standards Track                          19 August 2021
+Expires: 20 February 2022
 
 
          Authenticated delegation information using DS records
@@ -43,7 +43,7 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 18 February 2022.
+   This Internet-Draft will expire on 20 February 2022.
 
 Copyright Notice
 
@@ -129,7 +129,7 @@ Table of Contents
 
 3.  Proposal
 
-   This draft proposes a way to convey glue RRSets in DS records,
+   This draft proposes a way to convey a glue RRSet inside a DS record,
    enabling authenticated delivery of arbitrary RR types as part of the
    delegation response.
 
@@ -265,6 +265,10 @@ Table of Contents
    publish DSGLUE records containing RR types that have been registered
    for use with DSGLUE (Section 7), and recipients MUST ignore DSGLUE
    records indicating unexpected record types.
+
+   Recipients implementing this specification MUST accept the NS, A, and
+   AAAA RR types in DSGLUE.  Support for the other allowed RR types is
+   OPTIONAL.
 
 4.  Examples
 
