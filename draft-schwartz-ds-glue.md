@@ -52,25 +52,30 @@ Existing nameserver deployments assume that the delegation response includes onl
 
 # Proposal
 
-This draft proposes a way to convey glue RRs in DS records, enabling authenticated delivery of arbitrary RR types as part of the delegation response.
+This draft proposes a way to convey a glue RRSet inside a DS record, enabling authenticated delivery of arbitrary RR types as part of the delegation response.
 
-There are three main records involved in this process:
+There are three main records or RRSets involved in this process:
 
-* A Source Record to be conveyed, which may be of any RR type and anywhere below the zone cut.
-* A Virtual DNSKEY Record encapsulating the Source Record.
+* A Source RRSet to be conveyed, which may be of any RR type and anywhere below the zone cut.
+* A Virtual DNSKEY Record encapsulating the Source RRSet.
 * The DSGLUE Record, a DS record derived from the Virtual DNSKEY Record and published in the parent.
 
 ## Encoding {#encoding}
 
-To encode a Source Record, a zone operator first transforms it into a Virtual DNSKEY Record as follows:
+To encode a Source RRSet, a zone operator first transforms it into a Virtual DNSKEY Record as follows:
 
-* Owner Name = The Owner Name of the Source Record relative to the child zone apex.
+* Owner Name = The Owner Name of the Source RRSet relative to the child zone apex.
 * Flags = 0x0001, i.e. only SEP (bit 15) is set.
 * Protocol = 3
 * Algorithm = DS Glue (see IANA registration in {{iana}})
-* Public Key = The RR type and canonicalized RDATA of the Source Record ({{!RFC4034, Section 6.2}}).
+* Public Key = The following fields, concatenated
+  - The RR type (uint16)
+  - The RRSet TTL (uint32)
+  - For each Source Record in canonical order ({{!RFC4034, Section 6.3}}),
+    - A length prefix (uint16)
+    - The canonicalized RDATA ({{!RFC4034, Section 6.2}}).
 
-For example, these Source Records:
+For example, this Source RRSet:
 
 ~~~
 $ORIGIN example.com.
@@ -79,22 +84,25 @@ $ORIGIN example.com.
        IN NS NS.OTHER.EXAMPLE.
 ~~~
 
-would be represented as the following Virtual DNSKEY Records:
+would be represented as the following Virtual DNSKEY Record:
 
 ~~~
-; Public Key = \000\002 \003ns1\007example\003com\000
-. 300 IN DNSKEY 1 3 $DSGLUE_NUM AAIDbnMxB2V4YW1wbGUDY29tAA==
-; Public Key = \000\002 \003ns2\007example\003com\000
-. 300 IN DNSKEY 1 3 $DSGLUE_NUM AAIDbnMyB2V4YW1wbGUDY29tAA==
-; Public Key = \000\002 \002ns\005other\007example\000
-. 300 IN DNSKEY 1 3 $DSGLUE_NUM AAICbnMFb3RoZXIHZXhhbXBsZQA=
+; Public Key =
+; \000\002 ; Type = NS
+; \000\000\014\016 ; TTL=3600
+; \000\018 \002ns\005other\007example\000 ; Len=18, ns.other.example.
+; \000\017 \003ns1\007example\003com\000 ; Len=17, ns1.example.com.
+; \000\017 \003ns2\007example\003com\000 ; Len=17, ns2.example.com.
+
+. 300 IN DNSKEY 1 3 $DSGLUE_NUM ( AAIAAA4QABICbnMFb3RoZXIHZXhhbXBsZ
+    QAAEQNuczEHZXhhbXBsZQNjb20AABEDbnMyB2V4YW1wbGUDY29tAA== )
 ~~~
 
 Note that:
 
-* The NS Source Records are "real" records that appear in authoritative Answers and/or delegation glue, but the DNSKEY records are "virtual records" because they do not appear in any zone or response (in this form).
-* The Virtual DNSKEY Records' owner name is "." because the Source Records appear at the zone apex.
-* The NS RDATA has been converted to lowercase as specified by the canonicalization algorithm.
+* The NS Source Records are "real" records that appear in authoritative Answers and/or delegation glue, but the DNSKEY record is a "virtual record" because it does not appear in any zone or response (in this form).
+* The Virtual DNSKEY Record's owner name is "." because the Source RRSet appears at the zone apex.
+* The NS RDATA has been reordered and converted to lowercase as specified by the canonicalization algorithm.
 
 Having constructed a Virtual DNSKEY Record, the DSGLUE Record is constructed as usual, but always using the VERBATIM digest type {{!I-D.draft-vandijk-dnsop-ds-digest-verbatim}}.  Thus, the DSGLUE Record's wire format RDATA forms the following concatenation:
 
@@ -102,7 +110,7 @@ Having constructed a Virtual DNSKEY Record, the DSGLUE Record is constructed as 
 Key Tag | Algorithm = DSGLUE | Digest Type = VERBATIM | Digest = (
   DNSKEY owner name = name prefix | DNSKEY RDATA = (
     Flags = 1 | Protocol = 3 | Algorithm = DSGLUE | Public Key = (
-      RR Type | RDATA
+      RR Type | TTL | Len(1) | RDATA(1) | Len(2) | RDATA(2) | ...
     )
   )
 )
@@ -110,15 +118,17 @@ Key Tag | Algorithm = DSGLUE | Digest Type = VERBATIM | Digest = (
 
 The DSGLUE record is a real DS record that appears in the usual DS RRSet, whose owner name is the child apex.
 
-> QUESTION: Should we skip the virtual DNSKEY record, and construct the fake DS directly?  This would save 4-6 bytes per RR, but would lose the ability to reuse DNSKEY->DS construction codepaths (unchanged except for a new digest type).
+> QUESTION: Should we skip the virtual DNSKEY record, and construct the fake DS directly?  This would save 4-6 bytes per RRSet, but would lose the ability to reuse DNSKEY->DS construction codepaths (unchanged except for a new digest type).
 
 ## Interpretation
 
 Upon receiving a delegation response, resolvers implementing this specification SHALL compute the Adjusted Delegation Response as follows:
 
 1. Copy the delegation response.
-2. Reverse the encoding process of any DSGLUE records to reconstruct the source RRSets, all carrying the TTL of the DS RRSet.
+2. Reverse the encoding process of any DSGLUE records to reconstruct the source RRSets.
 3. Add each of these reconstructed RRSets to the Adjusted Delegation Response, replacing any RRSet with the same owner name and type.
+
+Note that a Source RRSet MAY be empty, indicating that there are no records of the corresponding type at this name.  After reconstructing an empty Source RRSet, recipients MUST remove any matching RRSets from the Adjusted Delegation Response and any glue cache, and MAY cache the negative result for the indicated TTL.
 
 Resolution then proceeds as usual, using the Adjusted Delegation Response.  When processing the DS RRSet, the recipient will verify the DS RRSIGs as usual, and abort the resolution as Bogus if DNSSEC validation fails.
 
@@ -126,15 +136,17 @@ Resolvers that do not implement this specification will ignore the DSGLUE record
 
 Source Records reconstructed from DSGLUE SHOULD be processed exactly like ordinary unauthenticated glue records.  For example, they MAY be cached for use in future delegations but MUST NOT be returned in any responses (c.f. {{Section 5.4.1 of ?RFC2181}}).
 
-## Special case: RR Type = NSEC or NSEC3
+## Allowed RR types
 
-Normally, the absence of a particular record in a delegation response is not informative to a resolver.  The corresponding record might still exist in the child zone.  To inform the resolver that a particular RRSet is nonexistent for the purposes of delegation, the zone owner MAY place an NSEC or NSEC3 record in the delegation response.
+DSGLUE records are capable of containing any record type.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, child zones MUST only publish DSGLUE records containing RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.
 
-As with other glue records, an NSEC glue record only affects behavior during delegation following (see example in {{example-nsec}}).
+Recipients implementing this specification MUST accept the NS, A, and AAAA RR types in DSGLUE.  Support for the other allowed RR types is OPTIONAL.
+
+Recipients MUST ignore any unauthenticated TLSA records.
 
 # Examples
 
-For these examples, the macro `$DSGLUE(prefix, source RR type, source RDATA)` constructs a DSGLUE DS record as described in {{encoding}}.
+For these examples, the macro `$DSGLUE(prefix, RR type, TTL, [RDATAs])` constructs a DSGLUE DS record as described in {{encoding}}.
 
 ## Out-of-bailiwick referral
 
@@ -150,8 +162,8 @@ These Source Records would be encoded in DSGLUE as:
 
 ~~~
 $ORIGIN com.
-example 3600 IN DS $DSGLUE(., NS, ns1.example.net.)
-             IN DS $DSGLUE(., NS, ns2.example.net.)
+example 3600 IN DS $DSGLUE(., NS, 3600,
+    [ns1.example.net., ns2.example.net.])
 ~~~
 
 ## In-bailiwick referral
@@ -172,17 +184,15 @@ These records would be encoded in DSGLUE as:
 
 ~~~
 $ORIGIN com.
-example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
-            IN DS $DSGLUE(., NS, ns2.example.com.)
-            IN DS $DSGLUE(ns1., A, 192.0.2.1)
-            IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
-            IN DS $DSGLUE(ns2., A, 192.0.2.1)
-            IN DS $DSGLUE(ns2., AAAA, 2001:db8::2)
+example 600 IN DS $DSGLUE(., NS, 3600, [ns1.example.com.,
+                                        ns2.example.com.])
+            IN DS $DSGLUE(ns1., A, 600, [192.0.2.1])
+            IN DS $DSGLUE(ns1., AAAA, 600, [2001:db8::1])
+            IN DS $DSGLUE(ns2., A, 600, [192.0.2.1])
+            IN DS $DSGLUE(ns2., AAAA, 600, [2001:db8::2])
 ~~~
 
-Note that the differing TTL between RRSets is lost.
-
-## In-bailiwick referral without IPv4 {#example-nsec}
+## In-bailiwick referral without IPv4
 
 Consider a delegation to a nameserver that is only reachable with IPv6:
 
@@ -192,18 +202,18 @@ example    3600 IN NS    ns1.example
 ns1.example 600 IN AAAA  2001:db8::1
 ~~~
 
-A zone in this configuration can optionally use an NSEC DSGLUE record to indicate that there is no IPv4 address:
+A zone in this configuration can optionally use an empty DSGLUE record to indicate that there is no IPv4 address:
 
 ~~~
 $ORIGIN com.
-example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
-            IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
-            IN DS $DSGLUE(ns1., NSEC, ns1.example.com. AAAA)
+example 600 IN DS $DSGLUE(., NS, 3600, [ns1.example.com.])
+            IN DS $DSGLUE(ns1., AAAA, 600, [2001:db8::1])
+            IN DS $DSGLUE(ns1., A, 7200, [])
 ~~~
 
-This arrangement prevents an adversary from inserting forged records for ns1.example.com or _dns.ns1.example.com into the delegation response.
+This arrangement prevents an adversary from inserting forged A records for ns1.example.com into the delegation response.
 
-Note that although there is an NSEC record denying the existence of A records for ns1.example.com, it is treated as a glue record that only applies during delegation, so such records can still be resolved if they exist.
+Note that this negative answer is treated as glue that only applies during delegation, so A records for ns1.example.com can still be resolved if they exist.
 
 ## Delegation with authenticated encryption
 
@@ -211,20 +221,19 @@ Assuming a SVCB-based signaling mechanism similar to {{?I-D.draft-schwartz-svcb-
 
 ~~~
 $ORIGIN com.
-example 600 IN DS $DSGLUE(., NS, ns1.example.com.)
-            IN DS $DSGLUE(ns1., A, 192.0.2.1)
-            IN DS $DSGLUE(ns1., AAAA, 2001:db8::1)
-            IN DS $DSGLUE(_dns.ns1., SVCB,
-                          1 ns1.example.com. alpn=dot)
+example 600 IN DS $DSGLUE(., NS, 3600, [ns1.example.com.])
+            IN DS $DSGLUE(ns1., A, 600, [192.0.2.1])
+            IN DS $DSGLUE(ns1., AAAA, 600, [2001:db8::1])
+            IN DS $DSGLUE(_dns.ns1., SVCB, 3600,
+                          [1 ns1.example.com. alpn=dot])
 ~~~
 
 ### Disabling DANE {#no-dane}
 
-Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process ({{tlsa}}).  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add NSEC records to indicate that there is no such TLSA record, e.g.:
+Resolvers check whether a nameserver supports DANE by resolving a TLSA record during the delegation process ({{tlsa}}).  However, this adds unnecessary latency to the delegation if the nameserver does not implement DANE.  As an optimization, such nameservers can add an empty DSGLUE RRSet to indicate that there is no such TLSA record, e.g.:
 
 ~~~
-IN DS $DSGLUE(ns1., NSEC, _dns.ns1.example.com. A AAAA)
-IN DS $DSGLUE(_dns.ns1., NSEC, ns1.example.com. SVCB)
+IN DS $DSGLUE(_853._tcp.ns1., TLSA, 7200, [])
 ~~~
 
 # Security Considerations
@@ -255,7 +264,9 @@ Nameservers supporting authenticated encryption MAY indicate any DANE mode, or n
 
 As an optimization, nameservers using DANE MAY place a TLSA record in the DSGLUE to avoid the latency of a TLSA lookup during delegation.  However, child zones should be aware that this adds complexity and delay to the process of TLSA key rotation.
 
-Nameservers that do not support DANE SHOULD add an NSEC or NSEC3 record denying the TLSA record to the DSGLUE, as shown in {{no-dane}}, to avoid an unnecessary delay.
+> QUESTION: Should we recommend for or against including nonempty TLSA in DSGLUE?  If CDS-like update mechanisms work well, and ADoT-DANE is widely deployed, this could warrant a positive recommendation.  Conversely, if rotation is error-prone, and ADoT-DANE is rare, a negative recommendation might be better.
+
+Nameservers that support PKI-based authentication but not DANE SHOULD deny the TLSA RRSet in the DSGLUE, as shown in {{no-dane}}, to avoid an unnecessary delay.
 
 Resolvers that support authenticated encryption MAY implement support for PKI-based authentication, DANE, or both.  PKI-only resolvers MUST nonetheless resolve TLSA records, and MUST NOT require authentication if the DANE mode is DANE-TA(2) or DANE-EE(3) {{!RFC7671}}.  DANE-only resolvers MUST NOT require authentication if the TLSA record does not exist.
 
@@ -266,6 +277,21 @@ IANA is requested to add a new entry to the DNS Security Algorithm Numbers regis
 | Number      | Description        | Mnemonic | Zone Signing | Trans. Sec. | Reference       |
 |-------------|--------------------|----------|--------------|-------------|-----------------|
 | $DSGLUE_NUM | Authenticated Glue | DSGLUE   | N            | ?           | (This document) |
+
+IANA is requested to open a new registry named "Authenticated Glue Allowed Record Types", with a policy of "Standards Action" and the following fields:
+
+* Record Type: The name of a registered DNS record type
+* Interpretation Reference: The standards document defining how to interpret this RR type in the Authenticated Glue context.
+
+The initial contents are as follows:
+
+| Record Type | Interpretation Reference |
+| ----------- | ------------------------ |
+| NS          | (This document)          |
+| A           | (This document)          |
+| AAAA        | (This document)          |
+| SVCB        | (This document)          |
+| TLSA        | (This document)          |
 
 --- back
 
