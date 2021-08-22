@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-08-19T00:29:16.497977+00:00",
+  "timestamp": "2021-08-22T00:33:06.644653+00:00",
   "repo": "bemasc/ds-glue",
   "labels": [
     {
@@ -144,24 +144,26 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NzE0NTUxNDQ1",
       "title": "Remove use of NSEC and restructure around RRSets",
       "url": "https://github.com/bemasc/ds-glue/pull/4",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "bemasc",
       "authorAssociation": "OWNER",
       "assignees": [],
       "labels": [],
       "body": "I've been unable to get the NSEC logic correct here, and feedback\r\nsuggests that it is likely to be more difficult to implement than\r\nanticipated.  This version provides a more limited form of authenticated\r\nnonexistence using empty RRSets, which required moving to an\r\nRRSet-oriented format.",
       "createdAt": "2021-08-17T20:40:14Z",
-      "updatedAt": "2021-08-18T23:27:56Z",
+      "updatedAt": "2021-08-19T16:00:15Z",
       "baseRepository": "bemasc/ds-glue",
       "baseRefName": "main",
       "baseRefOid": "83f227996d3c3980e645fd90cf055b5d6c097185",
       "headRepository": "bemasc/ds-glue",
       "headRefName": "no-nsec",
-      "headRefOid": "96a3525472cd04a694b21a0bfc086ab21a47542c",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
+      "headRefOid": "57584c03a45c1d397921b7cff494dcd5d85fe5dd",
+      "closedAt": "2021-08-19T16:00:11Z",
+      "mergedAt": "2021-08-19T16:00:11Z",
+      "mergedBy": "bemasc",
+      "mergeCommit": {
+        "oid": "fea97f7518189f99b6de7074327d1331ff3dbf8f"
+      },
       "comments": [],
       "reviews": [
         {
@@ -205,6 +207,90 @@
               "body": "I would prefer to not allow adding TLSA RRs to the DSGLUE (other than the presence/absence bit).",
               "createdAt": "2021-08-18T23:25:52Z",
               "updatedAt": "2021-08-18T23:27:56Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzM0MDg0OTkz",
+          "commit": {
+            "abbreviatedOid": "96a3525"
+          },
+          "author": "bemasc",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "Thanks Puneet!  One question for you at the bottom.",
+          "createdAt": "2021-08-19T14:46:57Z",
+          "updatedAt": "2021-08-19T15:05:31Z",
+          "comments": [
+            {
+              "originalPosition": 5,
+              "body": "Each child zone RRSet maps to one DSGLUE RR.  Clarified.",
+              "createdAt": "2021-08-19T14:46:57Z",
+              "updatedAt": "2021-08-19T15:05:31Z"
+            },
+            {
+              "originalPosition": 114,
+              "body": "Done",
+              "createdAt": "2021-08-19T14:47:05Z",
+              "updatedAt": "2021-08-19T15:05:31Z"
+            },
+            {
+              "originalPosition": 177,
+              "body": "Correct.  Each DSGLUE record unpacks into an RRSet, which overrides any exactly colliding glue RRSet.  Non-colliding glue remains unchanged.",
+              "createdAt": "2021-08-19T14:48:22Z",
+              "updatedAt": "2021-08-19T15:05:31Z"
+            },
+            {
+              "originalPosition": 180,
+              "body": "Abstractly, the DSGLUE contents are glue, not authoritative zone data.\r\n\r\nConcretely, the DSGLUE doesn't include RRSIGs, so DNSSEC validation would require re-resolving the records.  (There's no guarantee that the child and parent are in sync, so DNSSEC validation might fail if you try to use child RRSIGs with the DSGLUE output.)",
+              "createdAt": "2021-08-19T14:50:53Z",
+              "updatedAt": "2021-08-19T15:05:31Z"
+            },
+            {
+              "originalPosition": 214,
+              "body": "Interesting.  Why do you think it should be disallowed?  The text doesn't recommend  it, but it seems harmless (and a valuable optimization) for zones that are willing to deal with the maintenance overhead (which is really quite minimal when using CDS).\r\n\r\nRecipients (i.e. resolvers) are free to ignore nonempty TLSA DSGLUE.  If it helps, we could note that in the text.",
+              "createdAt": "2021-08-19T15:04:50Z",
+              "updatedAt": "2021-08-19T15:05:31Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzM0MTYwOTA2",
+          "commit": {
+            "abbreviatedOid": "fd2c195"
+          },
+          "author": "puneetsood",
+          "authorAssociation": "NONE",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-08-19T15:29:02Z",
+          "updatedAt": "2021-08-19T15:29:02Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "> Interesting. Why do you think it should be disallowed? The text doesn't recommend it, but it seems harmless (and a valuable optimization) for zones that are willing to deal with the maintenance overhead (which is really quite minimal when using CDS).\r\n> \r\n> Recipients (i.e. resolvers) are free to ignore nonempty TLSA DSGLUE. If it helps, we could note that in the text.\r\n\r\nOn the principle that adding features is easier than removing features. It is not clear yet that TLSA is essential and can be kept up to date by child zone operators. Should be added if there is consensus on the need for it.\r\n",
+              "createdAt": "2021-08-19T15:29:02Z",
+              "updatedAt": "2021-08-19T15:29:02Z"
+            }
+          ]
+        },
+        {
+          "id": "MDE3OlB1bGxSZXF1ZXN0UmV2aWV3NzM0MTk1MjA0",
+          "commit": {
+            "abbreviatedOid": "57584c0"
+          },
+          "author": "bemasc",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "",
+          "createdAt": "2021-08-19T15:59:55Z",
+          "updatedAt": "2021-08-19T15:59:55Z",
+          "comments": [
+            {
+              "originalPosition": 214,
+              "body": "I've added a note here discussing the open question about what to recommend:\r\n\r\n> QUESTION: Should we recommend for or against including nonempty TLSA in DSGLUE?  If CDS-like update mechanisms work well, and ADoT-DANE is widely deployed, this could warrant a positive recommendation.  Conversely, if rotation is error-prone, and ADoT-DANE is rare, a negative recommendation might be better.\r\n\r\nI actually think \"removing\" this option (i.e. deprecating it and ignoring any TLSA DSGLUE) would likely be easier than adding it in the future, due to the potential for systems rejecting unexpected new RR types.\r\n\r\nGiven the wide range of opinions about DANE generally, I don't expect we'll ever see a clear consensus about what is needed, but hopefully we can get more input from the working group.",
+              "createdAt": "2021-08-19T15:59:55Z",
+              "updatedAt": "2021-08-19T15:59:55Z"
             }
           ]
         }
