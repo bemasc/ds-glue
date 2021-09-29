@@ -100,7 +100,7 @@ would be represented as the following Virtual DNSKEY Record:
 
 Note that:
 
-* The NS Source Records are "real" records that appear in authoritative Answers and/or delegation glue, but the DNSKEY record is a "virtual record" because it does not appear in any zone or response (in this form).
+* The NS Source Records are "real" records that appear in authoritative Answers and/or delegation glue, but the DNSKEY record is a "virtual record" because it does not appear in this form in any zone or response.
 * The Virtual DNSKEY Record's owner name is "." because the Source RRSet appears at the zone apex.
 * The NS RDATA has been reordered and converted to lowercase as specified by the canonicalization algorithm.
 
@@ -138,7 +138,7 @@ Source Records reconstructed from DSGLUE SHOULD be processed exactly like ordina
 
 ## Allowed RR types
 
-DSGLUE records are capable of containing any record type.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, child zones MUST only publish DSGLUE records containing RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.
+DSGLUE records are capable of containing any record type, and parent zones SHOULD support publication of child zones' DSGLUE records regardless of the record types they contain.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, published DSGLUE records MUST contain only RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.
 
 Recipients implementing this specification MUST accept the NS, A, and AAAA RR types in DSGLUE.  Support for the other allowed RR types is OPTIONAL.
 
@@ -188,7 +188,7 @@ example 600 IN DS $DSGLUE(., NS, 3600, [ns1.example.com.,
                                         ns2.example.com.])
             IN DS $DSGLUE(ns1., A, 600, [192.0.2.1])
             IN DS $DSGLUE(ns1., AAAA, 600, [2001:db8::1])
-            IN DS $DSGLUE(ns2., A, 600, [192.0.2.1])
+            IN DS $DSGLUE(ns2., A, 600, [192.0.2.2])
             IN DS $DSGLUE(ns2., AAAA, 600, [2001:db8::2])
 ~~~
 
@@ -211,7 +211,7 @@ example 600 IN DS $DSGLUE(., NS, 3600, [ns1.example.com.])
             IN DS $DSGLUE(ns1., A, 7200, [])
 ~~~
 
-This arrangement prevents an adversary from inserting forged A records for ns1.example.com into the delegation response.
+This arrangement prevents an adversary who inserts forged A records for ns1.example.com into the delegation response from having those records used in resolution.
 
 Note that this negative answer is treated as glue that only applies during delegation, so A records for ns1.example.com can still be resolved if they exist.
 
