@@ -138,7 +138,7 @@ Source Records reconstructed from DSGLUE SHOULD be processed exactly like ordina
 
 ## Allowed RR types
 
-DSGLUE records are capable of containing any record type.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, published DSGLUE records MUST contain only RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.
+DSGLUE records are capable of containing any record type, and parent zones SHOULD support publication of child zones' DSGLUE records regardless of the record types they contain.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, published DSGLUE records MUST contain only RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.
 
 Recipients implementing this specification MUST accept the NS, A, and AAAA RR types in DSGLUE.  Support for the other allowed RR types is OPTIONAL.
 
