@@ -1,6 +1,6 @@
 {
   "magic": "E!vIA5L86J2I",
-  "timestamp": "2021-08-29T00:35:33.409284+00:00",
+  "timestamp": "2021-09-30T00:40:07.221765+00:00",
   "repo": "bemasc/ds-glue",
   "labels": [
     {
@@ -301,26 +301,70 @@
       "id": "MDExOlB1bGxSZXF1ZXN0NzIwMDk2NDg3",
       "title": "Small editorial changes, plus a technical correction to an example",
       "url": "https://github.com/bemasc/ds-glue/pull/5",
-      "state": "OPEN",
+      "state": "MERGED",
       "author": "paulehoffman",
-      "authorAssociation": "NONE",
+      "authorAssociation": "CONTRIBUTOR",
       "assignees": [],
       "labels": [],
       "body": "",
       "createdAt": "2021-08-26T00:52:30Z",
-      "updatedAt": "2021-08-26T00:52:31Z",
+      "updatedAt": "2021-09-29T19:02:16Z",
       "baseRepository": "bemasc/ds-glue",
       "baseRefName": "main",
       "baseRefOid": "9875332170a0feba463a471f2c91e2cb162f2380",
       "headRepository": "paulehoffman/ds-glue",
       "headRefName": "peh-editorial",
-      "headRefOid": "7b43f22dfaa1b6c83f0e291843be3e9c97c66963",
-      "closedAt": null,
-      "mergedAt": null,
-      "mergedBy": null,
-      "mergeCommit": null,
-      "comments": [],
-      "reviews": []
+      "headRefOid": "195d8c469e8325a1fbcfd157d31ad3f6f3418df4",
+      "closedAt": "2021-09-29T19:02:16Z",
+      "mergedAt": "2021-09-29T19:02:16Z",
+      "mergedBy": "bemasc",
+      "mergeCommit": {
+        "oid": "23f6c2d3dd76cc50af2aca25cd791f2954075881"
+      },
+      "comments": [
+        {
+          "author": "paulehoffman",
+          "authorAssociation": "CONTRIBUTOR",
+          "body": "I agree with your suggested clarification, but suspect it will get more wordsmithing as the WG proceeds.",
+          "createdAt": "2021-09-29T18:56:22Z",
+          "updatedAt": "2021-09-29T18:56:22Z"
+        }
+      ],
+      "reviews": [
+        {
+          "id": "PRR_kwDOF2UfRs4tt9l8",
+          "commit": {
+            "abbreviatedOid": "7b43f22"
+          },
+          "author": "bemasc",
+          "authorAssociation": "OWNER",
+          "state": "COMMENTED",
+          "body": "Thanks for the improvements.  One small point of discussion.",
+          "createdAt": "2021-09-29T17:59:58Z",
+          "updatedAt": "2021-09-29T18:07:20Z",
+          "comments": [
+            {
+              "originalPosition": 14,
+              "body": "My goal here was to convey the idea that it is the child zone's responsibility to restrict the RR types, not the parent's.  If the parent zone imposes this restriction, we get ossification.  However, I take your point that the child zone is not directly \"publishing\" the DSGLUE records, as the present text suggests.\r\n\r\nPerhaps a more explicit phrasing would be preferable:\r\n```suggestion\r\nDSGLUE records are capable of containing any record type, and parent zones SHOULD support publication of child zones' DSGLUE records regardless of the record types they contain.  However, the meaning of certain record types (e.g. NSEC) is not yet clear in the DSGLUE context.  To avoid ambiguity, published DSGLUE records MUST contain only RR types that have been registered for use with DSGLUE ({{iana}}), and recipients MUST ignore DSGLUE records indicating unexpected record types.\r\n```",
+              "createdAt": "2021-09-29T17:59:58Z",
+              "updatedAt": "2021-09-29T18:07:21Z"
+            }
+          ]
+        },
+        {
+          "id": "PRR_kwDOF2UfRs4tuLlt",
+          "commit": {
+            "abbreviatedOid": "195d8c4"
+          },
+          "author": "bemasc",
+          "authorAssociation": "OWNER",
+          "state": "APPROVED",
+          "body": "",
+          "createdAt": "2021-09-29T19:02:10Z",
+          "updatedAt": "2021-09-29T19:02:10Z",
+          "comments": []
+        }
+      ]
     }
   ]
 }
